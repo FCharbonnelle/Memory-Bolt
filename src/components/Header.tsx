@@ -32,12 +32,14 @@ export function Header({ selectedTheme, onThemeSelect }: HeaderProps) {
   }, [selectedTheme]);
 
   return (
-    <header className={`w-full p-2 sm:p-3 md:p-4 shadow-lg relative overflow-hidden transition-all duration-500 ${
+    <header className={`w-screen p-2 sm:p-3 md:p-4 shadow-lg relative overflow-hidden transition-all duration-500 ${
       isAnimating ? 'animate-pulse' : ''
     }`} style={{
       background: selectedTheme 
         ? 'linear-gradient(135deg, rgba(147,51,234,0.9) 0%, rgba(79,70,229,0.9) 100%)' 
-        : 'linear-gradient(135deg, rgba(124,58,237,0.9) 0%, rgba(219,39,119,0.9) 100%)'
+        : 'linear-gradient(135deg, rgba(124,58,237,0.9) 0%, rgba(219,39,119,0.9) 100%)',
+      width: '100vw',
+      maxWidth: '100vw'
     }}>
       {/* Effet de rayons magiques */}
       <div className="absolute inset-0 overflow-hidden">
@@ -58,7 +60,7 @@ export function Header({ selectedTheme, onThemeSelect }: HeaderProps) {
         ))}
       </div>
       
-      <div className="container mx-auto flex flex-col md:flex-row items-center justify-between relative z-10 px-2">
+      <div className="w-screen flex flex-col md:flex-row items-center justify-between relative z-10 px-2" style={{ maxWidth: '100vw' }}>
         <div className="mb-3 md:mb-0 transform transition-transform hover:scale-105 w-full md:w-auto text-center md:text-left">
           <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white flex items-center justify-center md:justify-start flex-wrap">
             <span className="mr-1 sm:mr-2 text-xl sm:text-2xl md:text-3xl lg:text-4xl">🎮</span>

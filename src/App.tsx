@@ -128,8 +128,18 @@ function App() {
 
   return (
     <div 
-      className="min-h-screen relative overflow-hidden transition-all duration-1000" 
-      style={getBackgroundStyle()}
+      className="w-screen h-screen min-h-screen relative overflow-hidden transition-all duration-1000" 
+      style={{
+        ...getBackgroundStyle(),
+        width: '100vw',
+        height: '100vh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'auto'
+      }}
     >
       {/* Particules magiques */}
       {particles.map((particle, i) => (
@@ -168,7 +178,7 @@ function App() {
         selectedTheme={gameState.currentTheme} 
         onThemeSelect={handleThemeSelect}
       />
-      <main className="container mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4 relative z-10">
+      <main className="w-screen py-4 sm:py-6 md:py-8 px-0 relative z-10" style={{ maxWidth: '100vw', width: '100vw' }}>
         {!gameState.currentTheme && (
           <div className="text-center py-10 sm:py-16 md:py-20 bg-white/30 backdrop-blur-md rounded-xl shadow-xl animate-fade-in mx-2 sm:mx-4">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-purple-900 animate-bounce px-3">Bienvenue au Quiz Magique pour Enfants ! 🎮</h2>
@@ -241,6 +251,8 @@ function App() {
             <QuizCarousel
               question={currentQuestion}
               onCorrectAnswer={handleCorrectAnswer}
+              themeColor="#8B5CF6"
+              themeEmoji={currentTheme?.emoji || '🌟'}
             />
           </div>
         )}
@@ -303,6 +315,28 @@ function App() {
         .animate-fade-in { animation: fade-in 1s ease-out; }
         .animate-slide-in { animation: slide-in 0.5s ease-out; }
         .animate-scale-in { animation: scale-in 0.8s ease-out; }
+        
+        /* Styles spécifiques pour le responsive et le plein écran */
+        @media screen and (max-width: 768px) {
+          body, html, #root {
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow-x: hidden !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+          }
+        }
+        
+        @media screen and (min-width: 769px) {
+          body, html, #root {
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow-x: hidden !important;
+          }
+        }
       `}</style>
     </div>
   );
