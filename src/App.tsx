@@ -14,8 +14,7 @@ function App() {
     currentQuestionIndex: 0,
     score: 0,
   });
-  const [particles, setParticles] = useState<{x: number, y: number, size: number, color: string, speed: number}[]>([]);
-  const [showMagicStars, setShowMagicStars] = useState(false);
+  const [particles, setParticles] = useState<{x: number, y: number, size: number, color: string, ascendSpeed: number, descendSpeed: number, direction: number, animationDelay: number, animationType: string, translateX: number, translateY: number, ascending: boolean, rotationAngle: number}[]>([]);
 
   const currentTheme = themes.find(t => t.id === gameState.currentTheme);
   const currentCategory = currentTheme?.categories.find(c => c.id === gameState.currentCategory);
@@ -36,37 +35,75 @@ function App() {
   // Effet pour générer des particules magiques flottantes
   useEffect(() => {
     const colors = ['#FFD700', '#FF69B4', '#00BFFF', '#7FFFD4', '#FF7F50', '#9370DB'];
-    const newParticles = Array.from({ length: 30 }, () => ({
+    const newParticles = Array.from({ length: 150 }, () => ({
       x: Math.random() * 100,
       y: Math.random() * 100,
       size: Math.random() * 5 + 2,
       color: colors[Math.floor(Math.random() * colors.length)],
-      speed: Math.random() * 1 + 0.5
+      ascendSpeed: Math.random() * 0.7 + 0.3, // Vitesse pour monter
+      descendSpeed: Math.random() * 0.4 + 0.2, // Vitesse plus lente pour descendre
+      direction: Math.random() > 0.5 ? 1 : -1,
+      animationDelay: Math.random() * 5,
+      animationType: Math.random() > 0.5 ? 'pulse-smooth' : 'twinkle',
+      translateX: 0,
+      translateY: 0,
+      ascending: true,
+      rotationAngle: Math.random() * 360 // Angle de rotation pour plus de variété
     }));
     setParticles(newParticles);
 
     const interval = setInterval(() => {
-      setParticles(prev => prev.map(p => ({
-        ...p,
-        y: p.y - p.speed > 0 ? p.y - p.speed : 100,
-        x: p.x + (Math.random() - 0.5) * 0.5
-      })));
-    }, 100);
-
+      requestAnimationFrame(() => {
+        setParticles(prev => prev.map(p => {
+          // Calculer les translations
+          let newTranslateY = p.translateY;
+          let newTranslateX = p.translateX + (Math.random() * 0.3 - 0.15) * p.direction;
+          let isAscending = p.ascending;
+          
+          // Si la particule monte
+          if (isAscending) {
+            newTranslateY = p.translateY - p.ascendSpeed;
+            
+            // Si la particule atteint le haut de l'écran, commencer à descendre
+            if (p.y + newTranslateY <= 0) {
+              isAscending = false;
+              // Légère pause en haut (effet de flottement)
+              newTranslateY = p.translateY;
+            }
+          } 
+          // Si la particule descend
+          else {
+            newTranslateY = p.translateY + p.descendSpeed;
+            
+            // Si la particule atteint le bas de l'écran, réinitialiser
+            if (p.y + newTranslateY >= 100) {
+              return {
+                ...p,
+                y: Math.random() * 40 + 60, // Apparaît principalement en bas de l'écran
+                x: Math.random() * 100,
+                translateX: 0,
+                translateY: 0,
+                ascending: true,
+                rotationAngle: Math.random() * 360,
+                color: colors[Math.floor(Math.random() * colors.length)] // Changement de couleur
+              };
+            }
+          }
+          
+          return {
+            ...p,
+            translateX: newTranslateX,
+            translateY: newTranslateY,
+            ascending: isAscending
+          };
+        }));
+      });
+    }, 16); // 60 FPS pour une animation très fluide
+    
     return () => clearInterval(interval);
   }, []);
 
-  // Activer les étoiles magiques quand un thème est sélectionné
-  useEffect(() => {
-    if (gameState.currentTheme) {
-      setShowMagicStars(true);
-    }
-  }, [gameState.currentTheme]);
-
   const handleThemeSelect = (themeId: string) => {
-    // Animation lors de la sélection d'un thème
-    setShowMagicStars(true);
-    
     setGameState({
       currentTheme: themeId,
       currentCategory: themes.find(t => t.id === themeId)?.categories[0].id || null,
@@ -145,7 +182,7 @@ function App() {
       {particles.map((particle, i) => (
         <div 
           key={i} 
-          className="absolute rounded-full animate-pulse opacity-70"
+          className={`absolute rounded-full animate-${particle.animationType}`}
           style={{
             left: `${particle.x}%`,
             top: `${particle.y}%`,
@@ -153,25 +190,14 @@ function App() {
             height: `${particle.size}px`,
             backgroundColor: particle.color,
             boxShadow: `0 0 ${particle.size * 2}px ${particle.color}`,
-            zIndex: 1
+            opacity: 0.7,
+            zIndex: 1,
+            transform: `translate(${particle.translateX}px, ${particle.translateY}px) rotate(${particle.rotationAngle}deg)`,
+            transition: 'transform 0.1s linear, background-color 1s ease-out',
+            animationDelay: `${particle.animationDelay}s`,
+            willChange: 'transform, opacity'
           }}
         />
-      ))}
-
-      {/* Étoiles magiques flottantes */}
-      {showMagicStars && Array.from({ length: 15 }).map((_, i) => (
-        <div 
-          key={`star-${i}`} 
-          className="absolute animate-float"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animation: `float ${Math.random() * 10 + 5}s infinite ease-in-out`,
-            zIndex: 1
-          }}
-        >
-          <div className="text-3xl transform rotate-45">✨</div>
-        </div>
       ))}
 
       <Header 
@@ -251,7 +277,6 @@ function App() {
             <QuizCarousel
               question={currentQuestion}
               onCorrectAnswer={handleCorrectAnswer}
-              themeColor="#8B5CF6"
               themeEmoji={currentTheme?.emoji || '🌟'}
             />
           </div>
@@ -289,10 +314,6 @@ function App() {
 
       {/* Styles pour animations */}
       <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0); }
-          50% { transform: translateY(-20px) rotate(10deg); }
-        }
         @keyframes wobble {
           0%, 100% { transform: rotate(0); }
           25% { transform: rotate(-5deg); }
@@ -310,11 +331,21 @@ function App() {
           from { transform: scale(0.8); opacity: 0; }
           to { transform: scale(1); opacity: 1; }
         }
-        .animate-float { animation: float 5s infinite ease-in-out; }
+        @keyframes pulse-smooth {
+          0% { transform: scale(0.95); opacity: 0.7; }
+          50% { transform: scale(1.05); opacity: 0.9; }
+          100% { transform: scale(0.95); opacity: 0.7; }
+        }
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 1; }
+        }
         .animate-wobble { animation: wobble 3s infinite ease-in-out; }
         .animate-fade-in { animation: fade-in 1s ease-out; }
         .animate-slide-in { animation: slide-in 0.5s ease-out; }
         .animate-scale-in { animation: scale-in 0.8s ease-out; }
+        .animate-pulse-smooth { animation: pulse-smooth 3s infinite ease-in-out; }
+        .animate-twinkle { animation: twinkle 2s infinite ease-in-out; }
         
         /* Styles spécifiques pour le responsive et le plein écran */
         @media screen and (max-width: 768px) {
